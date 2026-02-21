@@ -5,14 +5,15 @@ import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
-import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import gg.ngl.hyspeech.player.ui.page.HyspeechDialogPage;
+import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 
 import javax.annotation.Nonnull;
+import java.util.concurrent.CompletableFuture;
 
 /**
  *
@@ -34,7 +35,7 @@ import javax.annotation.Nonnull;
  *
  */
 
-public class HyspeechBeginCommand extends AbstractPlayerCommand {
+public class HyspeechBeginCommand extends AbstractCommand {
 
     private final RequiredArg<PlayerRef> playerArg;
     private final RequiredArg<String> dialogArg;
@@ -46,20 +47,23 @@ public class HyspeechBeginCommand extends AbstractPlayerCommand {
     }
 
     @Override
-    protected void execute(@Nonnull CommandContext commandContext, @Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+    protected CompletableFuture<Void> execute(@Nonnull CommandContext commandContext) {
         String label = commandContext.get(dialogArg);
 
         PlayerRef playerRef1 = playerArg.get(commandContext);
         Ref<EntityStore> ref1 = playerRef1.getReference();
         Store<EntityStore> store1 = ref1.getStore();
+        World world = ((EntityStore) store1.getExternalData()).getWorld();
 
-        Player playerComponent = store.getComponent(ref1, Player.getComponentType());
+        return CompletableFuture.runAsync(() -> {
+            Player playerComponent = store1.getComponent(ref1, Player.getComponentType());
 
-        if (playerComponent == null) {
-            return;
-        }
+            if (playerComponent == null) {
+                return;
+            }
 
-        playerComponent.getPageManager().openCustomPage(ref1, store1,
-                new HyspeechDialogPage(ref1, store1, playerRef1, label));
+            playerComponent.getPageManager().openCustomPage(ref1, store1,
+                    new HyspeechDialogPage(ref1, store1, playerRef1, label));
+        }, world);
     }
 }
