@@ -72,6 +72,20 @@ public class HyspeechDialogAsset implements JsonAssetWithMap<String, DefaultAsse
                     )
                     .documentation("The next dialog that should open after continuing.\n\nThis will eventually be replaced with multiline components.")
                     .add()
+                        .append(
+                            new KeyedCodec<>("Fail", Codec.STRING),
+                            (asset, s) -> asset.fail = s,
+                            asset -> asset.fail
+                        )
+                        .documentation("Fallback dialog opened when requirements are not met.")
+                        .add()
+                        .append(
+                            new KeyedCodec<>("Requirements", new ArrayCodec<>(HyspeechDialogRequirement.CODEC, HyspeechDialogRequirement[]::new)),
+                            (asset, requirements) -> asset.requirements = requirements,
+                            asset -> asset.requirements
+                        )
+                        .documentation("Requirements that must pass before opening this dialog.")
+                        .add()
                     .append(new KeyedCodec<>("Typewriter Effect", Codec.BOOLEAN),
                             (obj, val) -> obj.typewriterEffect = val,
                             obj -> obj.typewriterEffect
@@ -93,6 +107,8 @@ public class HyspeechDialogAsset implements JsonAssetWithMap<String, DefaultAsse
     public String id;
     public HyspeechDialogEntry[] entries;
     public String next;
+    public String fail;
+    public HyspeechDialogRequirement[] requirements;
 
     public boolean typewriterEffect = false;
 
@@ -134,6 +150,14 @@ public class HyspeechDialogAsset implements JsonAssetWithMap<String, DefaultAsse
 
     public String getNext() {
         return this.next;
+    }
+
+    public String getFail() {
+        return this.fail;
+    }
+
+    public HyspeechDialogRequirement[] getRequirements() {
+        return this.requirements;
     }
 
     public HyspeechMacroAsset getMacro() {
