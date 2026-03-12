@@ -1,10 +1,16 @@
 package gg.ngl.hyspeech.asset.dialog.action;
 
 import com.hypixel.hytale.builtin.adventure.npcobjectives.NPCObjectivesPlugin;
+import com.hypixel.hytale.builtin.adventure.objectives.Objective;
+import com.hypixel.hytale.builtin.adventure.objectives.ObjectiveDataStore;
+import com.hypixel.hytale.builtin.adventure.objectives.ObjectivePlugin;
+import com.hypixel.hytale.builtin.adventure.objectives.task.ObjectiveTask;
+import com.hypixel.hytale.builtin.adventure.objectives.task.UseEntityObjectiveTask;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
+import com.hypixel.hytale.server.core.entity.entities.player.data.PlayerConfigData;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -158,7 +164,9 @@ public class ActionBeginDialog extends ActionBase {
             }
 
             if (hasTaskRequirement) {
-                if (playerUuid == null || npcUuid == null || !NPCObjectivesPlugin.hasTask(playerUuid, npcUuid, taskId)) {
+                // Prefer live objective data to avoid stale task index right after objective start.
+                if (!hasTaskLive(playerComponent, store, taskId)
+                        && (playerUuid == null || npcUuid == null || !NPCObjectivesPlugin.hasTask(playerUuid, npcUuid, taskId))) {
                     return false;
                 }
             }
@@ -175,6 +183,46 @@ public class ActionBeginDialog extends ActionBase {
         }
 
         return uuidComponent.getUuid();
+    }
+
+    private boolean hasTaskLive(@Nonnull Player playerComponent, @Nonnull Store<EntityStore> store, @Nonnull String taskId) {
+        ObjectivePlugin objectivePlugin = ObjectivePlugin.get();
+        if (objectivePlugin == null) {
+            return false;
+        }
+
+        ObjectiveDataStore objectiveDataStore = objectivePlugin.getObjectiveDataStore();
+        if (objectiveDataStore == null) {
+            return false;
+        }
+
+        PlayerConfigData playerData = playerComponent.getPlayerConfigData();
+        if (playerData == null || playerData.getActiveObjectiveUUIDs() == null) {
+            return false;
+        }
+
+        for (UUID objectiveUuid : playerData.getActiveObjectiveUUIDs()) {
+            Objective objective = objectiveDataStore.getObjective(objectiveUuid);
+            if (objective == null) {
+                objective = objectiveDataStore.loadObjective(objectiveUuid, store);
+            }
+
+            if (objective == null || objective.getCurrentTasks() == null) {
+                continue;
+            }
+
+            for (ObjectiveTask objectiveTask : objective.getCurrentTasks()) {
+                if (!(objectiveTask instanceof UseEntityObjectiveTask useEntityTask)) {
+                    continue;
+                }
+
+                if (taskId.equals(useEntityTask.getAsset().getTaskId())) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
 }
