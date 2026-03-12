@@ -3,6 +3,7 @@ package gg.ngl.hyspeech.asset.dialog;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
+import com.hypixel.hytale.server.core.asset.type.item.config.Item;
 
 /**
  * A single dialog requirement evaluated before opening a dialog.
@@ -17,6 +18,7 @@ public class HyspeechDialogRequirement {
                             (obj, val) -> obj.itemId = val,
                             obj -> obj.itemId
                     )
+                    .addValidator(Item.VALIDATOR_CACHE.getValidator())
                     .documentation("Required item id.")
                     .add()
                     .append(
