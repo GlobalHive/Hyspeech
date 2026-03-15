@@ -136,10 +136,10 @@ public class ActionBeginDialog extends ActionBase {
 
             String itemId = requirement.getItemId();
             String taskId = requirement.getTaskId();
-            String metaData = requirement.getMetaData();
+            String[] metaData = requirement.getMetaData();
             boolean hasItemRequirement = itemId != null && !itemId.isBlank();
             boolean hasTaskRequirement = taskId != null && !taskId.isBlank();
-            boolean hasMetaDataRequirement = metaData != null && !metaData.isBlank();
+            boolean hasMetaDataRequirement = metaData != null && metaData.length > 0;
 
             if (!hasItemRequirement && !hasTaskRequirement && !hasMetaDataRequirement) {
                 return false;

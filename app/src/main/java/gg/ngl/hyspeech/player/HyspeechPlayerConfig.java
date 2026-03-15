@@ -58,10 +58,12 @@ public class HyspeechPlayerConfig {
         this.metaData = new String[0];
     }
 
-    public boolean hasMetaData(String metaData) {
+    public boolean hasMetaData(String[] metaData) {
         for (String data : this.metaData) {
-            if (data.equals(metaData)) {
-                return true;
+            for (String meta : metaData) {
+                if (data.equals(meta)) {
+                    return true;
+                }
             }
         }
         return false;
