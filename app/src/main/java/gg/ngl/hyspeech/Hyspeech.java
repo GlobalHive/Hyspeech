@@ -1,7 +1,6 @@
 package gg.ngl.hyspeech;
 
 import com.hypixel.hytale.assetstore.map.DefaultAssetMap;
-import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.asset.HytaleAssetStore;
 import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
@@ -13,9 +12,7 @@ import com.hypixel.hytale.server.core.util.Config;
 import com.hypixel.hytale.server.npc.NPCPlugin;
 import gg.ngl.hyspeech.asset.dialog.HyspeechDialogAsset;
 import gg.ngl.hyspeech.asset.dialog.action.builder.BuilderActionBeginDialog;
-import gg.ngl.hyspeech.asset.dialog.event.ChoiceSelectedEvent;
 import gg.ngl.hyspeech.asset.dialog.event.DialogEventBus;
-import gg.ngl.hyspeech.asset.dialog.event.DialogEventContext;
 import gg.ngl.hyspeech.asset.dialog.event.DialogInputReceivedEvent;
 import gg.ngl.hyspeech.asset.macro.HyspeechMacroAsset;
 import gg.ngl.hyspeech.demo.DemoClass;
@@ -205,7 +202,6 @@ public class Hyspeech extends JavaPlugin {
                 PlayerDisconnectEvent.class,
                 playerDisconnectEvent -> {
                     HyspeechPlayer player = hyspeechPlayerMap.get(playerDisconnectEvent.getPlayerRef());
-
                     Config<HyspeechPlayerConfig> cfg = new Config<>(
                             new File("config/hyspeech/player_data/").toPath(),
                             playerDisconnectEvent.getPlayerRef().getUsername(),
@@ -214,6 +210,7 @@ public class Hyspeech extends JavaPlugin {
 
                     cfg.load().thenAccept((_cfg) -> {
                         _cfg.setUuid(player.getConfig().get().playerUuid);
+                        _cfg.setMetaData(player.getConfig().get().metaData);
                     }).thenAccept((_) -> {
                         cfg.save().thenAccept((_) -> {
                             hyspeechPlayerMap.remove(playerDisconnectEvent.getPlayerRef());

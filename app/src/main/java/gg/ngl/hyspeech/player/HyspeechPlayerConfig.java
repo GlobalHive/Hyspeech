@@ -18,11 +18,52 @@ public class HyspeechPlayerConfig {
                             (config, val) -> config.setUuid(UUID.fromString(val)),
                             config -> config.playerUuid.toString())
                     .add()
+                    .append(new KeyedCodec<>("MetaData", Codec.STRING_ARRAY),
+                            (config, val) -> config.setMetaData(val),
+                            config -> config.metaData
+                        )
+                        .add()
                     .build();
 
     public UUID playerUuid;
+    public String[] metaData;
 
     public void setUuid(UUID uuid) {
         this.playerUuid = uuid;
+    }
+
+    public void setMetaData(String[] metaData) {
+        this.metaData = metaData;
+    }
+
+    public void addMetaData(String metaData) {
+        String[] newMetaData = new String[this.metaData.length + 1];
+        System.arraycopy(this.metaData, 0, newMetaData, 0, this.metaData.length);
+        newMetaData[newMetaData.length - 1] = metaData;
+        this.metaData = newMetaData;
+    }
+
+    public void removeMetaData(String metaData) {
+        String[] newMetaData = new String[this.metaData.length - 1];
+        int index = 0;
+        for (String data : this.metaData) {
+            if (!data.equals(metaData)) {
+                newMetaData[index++] = data;
+            }
+        }
+        this.metaData = newMetaData;
+    }
+
+    public void clearMetaData() {
+        this.metaData = new String[0];
+    }
+
+    public boolean hasMetaData(String metaData) {
+        for (String data : this.metaData) {
+            if (data.equals(metaData)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

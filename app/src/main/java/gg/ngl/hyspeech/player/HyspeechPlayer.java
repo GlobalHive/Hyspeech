@@ -21,6 +21,8 @@ public class HyspeechPlayer {
         getConfig().load().thenAccept((config) -> {
             if (config.playerUuid == null)
                 config.setUuid(getPlayerRef().getUuid());
+            if(config.metaData == null)
+                config.setMetaData(new String[0]);
         }).exceptionally((throwable -> {
             throwable.printStackTrace();
             return null;

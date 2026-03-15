@@ -41,10 +41,11 @@ public class HyspeechCommand extends AbstractPlayerCommand {
         addSubCommand(new HyspeechReloadCommand());
         addSubCommand(new HyspeechEnableCommand());
         addSubCommand(new HyspeechDisableCommand());
+        addSubCommand(new HySpeechPlayerMetaDataCommand());
     }
 
     @Override
     protected void execute(@Nonnull CommandContext commandContext, @Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
-        commandContext.sender().sendMessage(Message.raw("Usage: /hyspeech <config|reload|disable|enable|setup>"));
+        commandContext.sender().sendMessage(Message.raw("Usage: /hyspeech <begin|config|reload|disable|enable|setup>"));
     }
 }
