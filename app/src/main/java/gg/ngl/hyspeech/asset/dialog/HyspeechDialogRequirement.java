@@ -29,7 +29,7 @@ public class HyspeechDialogRequirement {
                     .documentation("Required amount of the item.")
                     .add()
                     .append(
-                        new KeyedCodec<>("TaskID", Codec.STRING),
+                        new KeyedCodec<>("TaskId", Codec.STRING),
                         (obj, val) -> obj.taskId = val,
                         obj -> obj.taskId
                     )
