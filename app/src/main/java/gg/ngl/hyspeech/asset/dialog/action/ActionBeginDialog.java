@@ -19,9 +19,12 @@ import com.hypixel.hytale.server.npc.asset.builder.BuilderSupport;
 import com.hypixel.hytale.server.npc.corecomponents.ActionBase;
 import com.hypixel.hytale.server.npc.role.Role;
 import com.hypixel.hytale.server.npc.sensorinfo.InfoProvider;
+
+import gg.ngl.hyspeech.Hyspeech;
 import gg.ngl.hyspeech.asset.dialog.HyspeechDialogAsset;
 import gg.ngl.hyspeech.asset.dialog.HyspeechDialogRequirement;
 import gg.ngl.hyspeech.asset.dialog.action.builder.BuilderActionBeginDialog;
+import gg.ngl.hyspeech.player.HyspeechPlayerConfig;
 import gg.ngl.hyspeech.player.ui.page.HyspeechDialogPage;
 
 import javax.annotation.Nonnull;
@@ -123,6 +126,7 @@ public class ActionBeginDialog extends ActionBase {
 
         UUID npcUuid = getEntityUuid(store, npcRef);
         UUID playerUuid = getEntityUuid(store, playerRef);
+        HyspeechPlayerConfig playerConfig = Hyspeech.hyspeechPlayerMap.get(playerComponent.getPlayerRef()).getConfig().get();
 
         ItemContainer allItems = playerComponent.getInventory().getCombinedEverything();
         for (HyspeechDialogRequirement requirement : requirements) {
@@ -132,10 +136,12 @@ public class ActionBeginDialog extends ActionBase {
 
             String itemId = requirement.getItemId();
             String taskId = requirement.getTaskId();
+            String metaData = requirement.getMetaData();
             boolean hasItemRequirement = itemId != null && !itemId.isBlank();
             boolean hasTaskRequirement = taskId != null && !taskId.isBlank();
+            boolean hasMetaDataRequirement = metaData != null && !metaData.isBlank();
 
-            if (!hasItemRequirement && !hasTaskRequirement) {
+            if (!hasItemRequirement && !hasTaskRequirement && !hasMetaDataRequirement) {
                 return false;
             }
 
@@ -164,11 +170,14 @@ public class ActionBeginDialog extends ActionBase {
             }
 
             if (hasTaskRequirement) {
-                // Prefer live objective data to avoid stale task index right after objective start.
                 if (!hasTaskLive(playerComponent, store, taskId)
                         && (playerUuid == null || npcUuid == null || !NPCObjectivesPlugin.hasTask(playerUuid, npcUuid, taskId))) {
                     return false;
                 }
+            }
+
+            if (hasMetaDataRequirement && !playerConfig.hasMetaData(metaData)) {
+                return false;
             }
         }
 

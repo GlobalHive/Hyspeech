@@ -28,18 +28,26 @@ public class HyspeechDialogRequirement {
                     )
                     .documentation("Required amount of the item.")
                     .add()
-                        .append(
-                            new KeyedCodec<>("TaskID", Codec.STRING),
-                            (obj, val) -> obj.taskId = val,
-                            obj -> obj.taskId
-                        )
-                        .documentation("Required task id that must exist for this player.")
-                        .add()
+                    .append(
+                        new KeyedCodec<>("TaskID", Codec.STRING),
+                        (obj, val) -> obj.taskId = val,
+                        obj -> obj.taskId
+                    )
+                    .documentation("Required task id that must exist for this player.")
+                    .add()
+                    .append(
+                        new KeyedCodec<>("MetaData", Codec.STRING),
+                        (obj, val) -> obj.metaData = val,
+                        obj -> obj.metaData
+                    )
+                    .documentation("Required metadata that must exist for this player.")
+                    .add()
                     .build();
 
     public String itemId;
     public int amount = 1;
     public String taskId;
+    public String metaData;
 
     protected HyspeechDialogRequirement() {
     }
@@ -54,5 +62,9 @@ public class HyspeechDialogRequirement {
 
     public String getTaskId() {
         return this.taskId;
+    }
+
+    public String getMetaData() {
+        return this.metaData;
     }
 }
