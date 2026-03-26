@@ -136,17 +136,17 @@ public class ActionBeginDialog extends ActionBase {
 
             String itemId = requirement.getItemId();
             String taskId = requirement.getTaskId();
-            String[] metaData = requirement.getMetaData();
+            String metaData = requirement.getMetaData();
             boolean hasItemRequirement = itemId != null && !itemId.isBlank();
             boolean hasTaskRequirement = taskId != null && !taskId.isBlank();
-            boolean hasMetaDataRequirement = metaData != null && metaData.length > 0;
+            boolean hasMetaDataRequirement = metaData != null && !metaData.isBlank();
 
             if (!hasItemRequirement && !hasTaskRequirement && !hasMetaDataRequirement) {
                 return false;
             }
 
             if (hasItemRequirement) {
-                int requiredAmount = Math.max(1, requirement.getAmount());
+                int requiredAmount = requirement.getAmount();
                 int currentAmount = 0;
                 for (short slot = 0; slot < allItems.getCapacity(); slot++) {
                     ItemStack stack = allItems.getItemStack(slot);
@@ -159,13 +159,20 @@ public class ActionBeginDialog extends ActionBase {
                     }
 
                     currentAmount += stack.getQuantity();
-                    if (currentAmount >= requiredAmount) {
+                    if (requiredAmount > 0 && currentAmount >= requiredAmount) {
                         break;
                     }
                 }
 
-                if (currentAmount < requiredAmount) {
-                    return false;
+                if (requiredAmount == 0) {
+                    if (currentAmount > 0) {
+                        return false;
+                    }
+                } else {
+                    int minimumRequiredAmount = Math.max(1, requiredAmount);
+                    if (currentAmount < minimumRequiredAmount) {
+                        return false;
+                    }
                 }
             }
 

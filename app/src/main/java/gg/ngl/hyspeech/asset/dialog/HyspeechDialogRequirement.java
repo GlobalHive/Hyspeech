@@ -36,7 +36,7 @@ public class HyspeechDialogRequirement {
                     .documentation("Required task id that must exist for this player.")
                     .add()
                     .append(
-                        new KeyedCodec<>("MetaData", Codec.STRING_ARRAY),
+                        new KeyedCodec<>("MetaData", Codec.STRING),
                         (obj, val) -> obj.metaData = val,
                         obj -> obj.metaData
                     )
@@ -47,7 +47,7 @@ public class HyspeechDialogRequirement {
     public String itemId;
     public int amount = 1;
     public String taskId;
-    public String[] metaData;
+    public String metaData;
 
     protected HyspeechDialogRequirement() {
     }
@@ -64,7 +64,7 @@ public class HyspeechDialogRequirement {
         return this.taskId;
     }
 
-    public String[] getMetaData() {
+    public String getMetaData() {
         return this.metaData;
     }
 }

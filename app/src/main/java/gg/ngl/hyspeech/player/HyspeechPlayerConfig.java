@@ -21,8 +21,8 @@ public class HyspeechPlayerConfig {
                     .append(new KeyedCodec<>("MetaData", Codec.STRING_ARRAY),
                             (config, val) -> config.setMetaData(val),
                             config -> config.metaData
-                        )
-                        .add()
+                    )
+                    .add()
                     .build();
 
     public UUID playerUuid;
@@ -58,12 +58,10 @@ public class HyspeechPlayerConfig {
         this.metaData = new String[0];
     }
 
-    public boolean hasMetaData(String[] metaData) {
+    public boolean hasMetaData(String metaData) {
         for (String data : this.metaData) {
-            for (String meta : metaData) {
-                if (data.equals(meta)) {
-                    return true;
-                }
+            if (data.equals(metaData)) {
+                return true;
             }
         }
         return false;
