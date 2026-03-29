@@ -128,7 +128,7 @@ public class ActionBeginDialog extends ActionBase {
         UUID playerUuid = getEntityUuid(store, playerRef);
         HyspeechPlayerConfig playerConfig = Hyspeech.hyspeechPlayerMap.get(playerComponent.getPlayerRef()).getConfig().get();
 
-        ItemContainer allItems = playerComponent.getInventory().getCombinedEverything();
+        ItemContainer allItems = playerComponent.getInventory().getCombinedHotbarFirst();
         for (HyspeechDialogRequirement requirement : requirements) {
             if (requirement == null) {
                 continue;
