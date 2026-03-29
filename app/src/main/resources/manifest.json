@@ -1,7 +1,7 @@
 {
   "Group": "gg.ngl.hyspeech",
   "Name": "hyspeech",
-  "Version": "1.0.9",
+  "Version": "1.2.1",
   "Description": "Introduces configurable dialogue via Asset Editor, including UI.",
   "Authors": [
     {
@@ -11,10 +11,13 @@
     {
       "Name": "Naughty Klaus",
       "Url": "http://ngl.gg"
+    },
+    {
+      "Name": "GlobalHive"
     }
   ],
   "Main": "gg.ngl.hyspeech.Hyspeech",
-  "ServerVersion": "2026.01.19-1a311a592",
+  "ServerVersion": "2026.03.26-89796e57b",
   "Dependencies": {},
   "OptionalDependencies": {},
   "DisabledByDefault": false,
