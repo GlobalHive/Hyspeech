@@ -120,8 +120,15 @@ public class HyspeechDialogPage extends InteractiveCustomUIPage<HyspeechDialogPa
         ctx.put(Hyspeech.class, Hyspeech.get());
         Hyspeech.get().populateContext(ctx);
 
-        Message message = Message.translation("hyspeech.dialog." + asset.getId() + ".name");
-        message = Message.translation(Hyspeech.get().process(message.getAnsiMessage(), ctx));
+        Message message;
+        if(asset.getName() != null && !asset.getName().isEmpty()) {
+            message = Message.translation(asset.getName());
+            message = Message.translation(Hyspeech.get().process(message.getAnsiMessage(), ctx));
+        } else {
+            message = Message.translation("hyspeech.dialog." + asset.getId() + ".name");
+            message = Message.translation(Hyspeech.get().process(message.getAnsiMessage(), ctx));
+        }
+
         commands.set("#NameTitle.TextSpans", message);
 
         if(currentDialogType.isInput()) {

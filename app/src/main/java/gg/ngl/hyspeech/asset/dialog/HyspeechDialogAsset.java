@@ -51,6 +51,12 @@ public class HyspeechDialogAsset implements JsonAssetWithMap<String, DefaultAsse
                             asset -> asset.extraData
                     )
                     .append(
+                            new KeyedCodec<>("Name", Codec.STRING),
+                            (obj, val) -> obj.name = val,
+                            obj -> obj.name
+                    )
+                    .add()
+                    .append(
                             new KeyedCodec<>("Type", DIALOG_TYPE_ENUM_CODEC),
                             (obj, val) -> obj.type = val,
                             obj -> obj.type
@@ -102,6 +108,7 @@ public class HyspeechDialogAsset implements JsonAssetWithMap<String, DefaultAsse
 
     private static AssetStore<String, HyspeechDialogAsset, DefaultAssetMap<String, HyspeechDialogAsset>> ASSET_STORE;
     public AssetExtraInfo.Data extraData;
+    public String name;
     public HyspeechDialogType type = HyspeechDialogType.DIALOG_1;
     public HyspeechMacroAsset macro;
     public String id;
@@ -138,6 +145,10 @@ public class HyspeechDialogAsset implements JsonAssetWithMap<String, DefaultAsse
     @Override
     public String getId() {
         return this.id;
+    }
+
+    public String getName() {
+        return this.name;
     }
 
     public HyspeechDialogType getType() {
