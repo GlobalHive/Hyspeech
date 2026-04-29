@@ -3,6 +3,7 @@ package gg.ngl.hyspeech.asset.dialog;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
+import com.hypixel.hytale.codec.codecs.array.ArrayCodec;
 import com.hypixel.hytale.codec.validation.Validators;
 import gg.ngl.hyspeech.asset.macro.HyspeechMacroAsset;
 
@@ -51,11 +52,18 @@ public class HyspeechDialogEntry {
                             obj -> obj.macro
                     )
                     .add()
+                    .append(
+                            new KeyedCodec<>("Requirements", new ArrayCodec<>(HyspeechDialogRequirement.CODEC, HyspeechDialogRequirement[]::new)),
+                            (obj, val) -> obj.requirements = val,
+                            obj -> obj.requirements
+                    )
+                    .add()
                     .build();
 
     public String content;
     public String next;
     public HyspeechMacroAsset macro;
+    public HyspeechDialogRequirement[] requirements;
 
     public HyspeechDialogEntry(String content, String next) {
         this.content = content;
@@ -75,6 +83,10 @@ public class HyspeechDialogEntry {
 
     public HyspeechMacroAsset getMacro() {
         return this.macro;
+    }
+
+    public HyspeechDialogRequirement[] getRequirements() {
+        return this.requirements;
     }
 
     @Nonnull

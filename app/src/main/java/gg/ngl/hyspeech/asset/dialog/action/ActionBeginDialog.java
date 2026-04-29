@@ -1,6 +1,5 @@
 package gg.ngl.hyspeech.asset.dialog.action;
 
-import com.hypixel.hytale.builtin.adventure.npcobjectives.NPCObjectivesPlugin;
 import com.hypixel.hytale.builtin.adventure.objectives.Objective;
 import com.hypixel.hytale.builtin.adventure.objectives.ObjectiveDataStore;
 import com.hypixel.hytale.builtin.adventure.objectives.ObjectivePlugin;
@@ -9,7 +8,6 @@ import com.hypixel.hytale.builtin.adventure.objectives.task.UseEntityObjectiveTa
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.entity.entities.Player;
-import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.player.data.PlayerConfigData;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
@@ -29,6 +27,8 @@ import gg.ngl.hyspeech.player.ui.page.HyspeechDialogPage;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -82,7 +82,7 @@ public class ActionBeginDialog extends ActionBase {
                 return false;
             }
 
-            String initialDialogId = resolveInitialDialogId(ref, playerReference, store, playerComponent);
+            String initialDialogId = resolveInitialDialogId(store, playerComponent);
             if (initialDialogId == null) {
                 return false;
             }
@@ -97,35 +97,38 @@ public class ActionBeginDialog extends ActionBase {
     }
 
     @Nullable
-    private String resolveInitialDialogId(@Nonnull Ref<EntityStore> npcRef, @Nonnull Ref<EntityStore> playerRef,
-                                          @Nonnull Store<EntityStore> store, @Nonnull Player playerComponent) {
-        HyspeechDialogAsset asset = HyspeechDialogAsset.getAssetMap().getAsset(this.dialogId);
-        if (asset == null) {
-            return this.dialogId;
+    private String resolveInitialDialogId(@Nonnull Store<EntityStore> store, @Nonnull Player playerComponent) {
+        String currentDialogId = this.dialogId;
+        Set<String> visitedDialogIds = new HashSet<>();
+
+        while (currentDialogId != null && !currentDialogId.isBlank()) {
+            if (!visitedDialogIds.add(currentDialogId)) {
+                return null;
+            }
+
+            HyspeechDialogAsset asset = HyspeechDialogAsset.getAssetMap().getAsset(currentDialogId);
+            if (asset == null) {
+                return currentDialogId;
+            }
+
+            if (areRequirementsMet(asset, store, playerComponent)) {
+                return currentDialogId;
+            }
+
+            currentDialogId = asset.getFail();
         }
 
-        if (areRequirementsMet(asset, npcRef, playerRef, store, playerComponent)) {
-            return this.dialogId;
-        }
-
-        String failDialog = asset.getFail();
-        if (failDialog == null || failDialog.isBlank()) {
-            return null;
-        }
-
-        return failDialog;
+        return null;
     }
 
-    private boolean areRequirementsMet(@Nonnull HyspeechDialogAsset asset, @Nonnull Ref<EntityStore> npcRef,
-                                       @Nonnull Ref<EntityStore> playerRef, @Nonnull Store<EntityStore> store,
+    private boolean areRequirementsMet(@Nonnull HyspeechDialogAsset asset,
+                                       @Nonnull Store<EntityStore> store,
                                        @Nonnull Player playerComponent) {
         HyspeechDialogRequirement[] requirements = asset.getRequirements();
         if (requirements == null || requirements.length == 0) {
             return true;
         }
 
-        UUID npcUuid = getEntityUuid(store, npcRef);
-        UUID playerUuid = getEntityUuid(store, playerRef);
         HyspeechPlayerConfig playerConfig = Hyspeech.hyspeechPlayerMap.get(playerComponent.getPlayerRef()).getConfig().get();
 
         ItemContainer allItems = playerComponent.getInventory().getCombinedHotbarFirst();
@@ -177,8 +180,7 @@ public class ActionBeginDialog extends ActionBase {
             }
 
             if (hasTaskRequirement) {
-                if (!hasTaskLive(playerComponent, store, taskId)
-                        && (playerUuid == null || npcUuid == null || !NPCObjectivesPlugin.hasTask(playerUuid, npcUuid, taskId))) {
+                if (!hasTaskLive(playerComponent, store, taskId)) {
                     return false;
                 }
             }
@@ -189,16 +191,6 @@ public class ActionBeginDialog extends ActionBase {
         }
 
         return true;
-    }
-
-    @Nullable
-    private UUID getEntityUuid(@Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> entityRef) {
-        UUIDComponent uuidComponent = store.getComponent(entityRef, UUIDComponent.getComponentType());
-        if (uuidComponent == null) {
-            return null;
-        }
-
-        return uuidComponent.getUuid();
     }
 
     private boolean hasTaskLive(@Nonnull Player playerComponent, @Nonnull Store<EntityStore> store, @Nonnull String taskId) {
