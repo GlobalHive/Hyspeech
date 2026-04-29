@@ -180,17 +180,42 @@ public class ActionBeginDialog extends ActionBase {
             }
 
             if (hasTaskRequirement) {
-                if (!hasTaskLive(playerComponent, store, taskId)) {
+                if (!isTaskRequirementMet(playerComponent, store, taskId)) {
                     return false;
                 }
             }
 
-            if (hasMetaDataRequirement && !playerConfig.hasMetaData(metaData)) {
+            if (hasMetaDataRequirement && !isMetaDataRequirementMet(playerConfig, metaData)) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    private boolean isTaskRequirementMet(@Nonnull Player playerComponent,
+                                         @Nonnull Store<EntityStore> store,
+                                         @Nonnull String taskRequirement) {
+        boolean isNegative = taskRequirement.startsWith("-");
+        String normalizedTaskId = isNegative ? taskRequirement.substring(1) : taskRequirement;
+        if (normalizedTaskId.isBlank()) {
+            return false;
+        }
+
+        boolean hasTask = hasTaskLive(playerComponent, store, normalizedTaskId);
+        return isNegative ? !hasTask : hasTask;
+    }
+
+    private boolean isMetaDataRequirementMet(@Nonnull HyspeechPlayerConfig playerConfig,
+                                             @Nonnull String metaDataRequirement) {
+        boolean isNegative = metaDataRequirement.startsWith("-");
+        String normalizedMetaData = isNegative ? metaDataRequirement.substring(1) : metaDataRequirement;
+        if (normalizedMetaData.isBlank()) {
+            return false;
+        }
+
+        boolean hasMetaData = playerConfig.hasMetaData(normalizedMetaData);
+        return isNegative ? !hasMetaData : hasMetaData;
     }
 
     private boolean hasTaskLive(@Nonnull Player playerComponent, @Nonnull Store<EntityStore> store, @Nonnull String taskId) {

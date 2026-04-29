@@ -129,6 +129,54 @@ public class HyspeechDialogPage extends InteractiveCustomUIPage<HyspeechDialogPa
             return;
         }
 
+        Player playerComponent = getPlayerComponent(entStore);
+        Set<String> visitedChoiceDialogs = new HashSet<>();
+
+        // Resolve choice dialogs that have no visible options before rendering.
+        while (asset.getType().isChoice()) {
+            if (!visitedChoiceDialogs.add(asset.getId())) {
+                this.close();
+                return;
+            }
+
+            Arrays.fill(eligibleChoices, false);
+            int visibleCount = 0;
+
+            if (asset.entries != null && asset.entries.length > 0) {
+                int choiceCount = Math.min(asset.entries.length, eligibleChoices.length);
+                for (int i = 0; i < choiceCount; i++) {
+                    boolean eligible = isEntryRequirementMet(asset.entries[i], entRef, entStore, playerComponent);
+                    eligibleChoices[i] = eligible;
+                    if (eligible) {
+                        visibleCount++;
+                    }
+                }
+            }
+
+            if (visibleCount > 0) {
+                break;
+            }
+
+            String fail = asset.getFail();
+            if (fail == null || fail.isBlank()) {
+                this.close();
+                return;
+            }
+
+            String resolved = resolveDialogKeyByRequirements(fail, entRef, entStore);
+            if (resolved == null) {
+                this.close();
+                return;
+            }
+
+            setKey(resolved);
+            asset = getAsset();
+            if (asset == null) {
+                this.close();
+                return;
+            }
+        }
+
         currentDialogType = asset.getType();
 
         if (currentDialogType.equals(HyspeechDialogType.UNSET)) {
@@ -176,10 +224,9 @@ public class HyspeechDialogPage extends InteractiveCustomUIPage<HyspeechDialogPa
             Arrays.fill(eligibleChoices, false);
 
             if (asset.entries != null && asset.entries.length > 0) {
-                Player playerComponent = getPlayerComponent(entStore);
-
                 int visibleCount = 0;
-                for (int i = 0; i < asset.entries.length; i++) {
+                int choiceCount = Math.min(asset.entries.length, eligibleChoices.length);
+                for (int i = 0; i < choiceCount; i++) {
                     boolean eligible = isEntryRequirementMet(asset.entries[i], entRef, entStore, playerComponent);
                     eligibleChoices[i] = eligible;
                     if (eligible) {
@@ -195,19 +242,8 @@ public class HyspeechDialogPage extends InteractiveCustomUIPage<HyspeechDialogPa
                 }
 
                 if (visibleCount == 0) {
-                    // No choices are visible; advance to Fail or close
-                    isProcessing = true;
-                    String fail = asset.getFail();
-                    if (fail != null && !fail.isBlank()) {
-                        String resolved = resolveDialogKeyByRequirements(fail, entRef, entStore);
-                        if (resolved == null) {
-                            this.close();
-                        } else {
-                            setKey(resolved);
-                        }
-                    } else {
-                        this.close();
-                    }
+                    this.close();
+                    return;
                 }
             }
         }
@@ -217,7 +253,8 @@ public class HyspeechDialogPage extends InteractiveCustomUIPage<HyspeechDialogPa
          */
         if (!currentDialogType.isInput())
             if (asset.entries != null && asset.entries.length > 0) {
-                for (int i = 0; i < asset.entries.length; i++) {
+                int entryCount = Math.min(asset.entries.length, eligibleChoices.length);
+                for (int i = 0; i < entryCount; i++) {
                     if (currentDialogType.isChoice() && !eligibleChoices[i]) {
                         continue;
                     }
@@ -426,11 +463,10 @@ public class HyspeechDialogPage extends InteractiveCustomUIPage<HyspeechDialogPa
             }
 
             if (hasTask) {
-                boolean live = hasTaskLive(playerComponent, entStore, taskId);
-                if (!live) return false;
+                if (!isTaskRequirementMet(playerComponent, entStore, taskId)) return false;
             }
 
-            if (hasMeta && !playerConfig.hasMetaData(metaData)) {
+            if (hasMeta && !isMetaDataRequirementMet(playerConfig, metaData)) {
                 return false;
             }
         }
@@ -491,16 +527,36 @@ public class HyspeechDialogPage extends InteractiveCustomUIPage<HyspeechDialogPa
             }
 
             if (hasTask) {
-                boolean live = hasTaskLive(playerComponent, entStore, taskId);
-                if (!live) return false;
+                if (!isTaskRequirementMet(playerComponent, entStore, taskId)) return false;
             }
 
-            if (hasMeta && !playerConfig.hasMetaData(metaData)) {
+            if (hasMeta && !isMetaDataRequirementMet(playerConfig, metaData)) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    private boolean isTaskRequirementMet(@Nonnull Player playerComponent,
+                                         @Nonnull Store<EntityStore> store,
+                                         @Nonnull String taskRequirement) {
+        boolean isNegative = taskRequirement.startsWith("-");
+        String normalizedTaskId = isNegative ? taskRequirement.substring(1) : taskRequirement;
+        if (normalizedTaskId.isBlank()) return false;
+
+        boolean hasTask = hasTaskLive(playerComponent, store, normalizedTaskId);
+        return isNegative ? !hasTask : hasTask;
+    }
+
+    private boolean isMetaDataRequirementMet(@Nonnull HyspeechPlayerConfig playerConfig,
+                                             @Nonnull String metaDataRequirement) {
+        boolean isNegative = metaDataRequirement.startsWith("-");
+        String normalizedMetaData = isNegative ? metaDataRequirement.substring(1) : metaDataRequirement;
+        if (normalizedMetaData.isBlank()) return false;
+
+        boolean hasMetaData = playerConfig.hasMetaData(normalizedMetaData);
+        return isNegative ? !hasMetaData : hasMetaData;
     }
 
     private boolean hasTaskLive(@Nonnull Player playerComponent,
