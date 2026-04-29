@@ -20,6 +20,7 @@ import com.hypixel.hytale.server.npc.sensorinfo.InfoProvider;
 
 import gg.ngl.hyspeech.Hyspeech;
 import gg.ngl.hyspeech.asset.dialog.HyspeechDialogAsset;
+import gg.ngl.hyspeech.asset.dialog.HyspeechDialogEntry;
 import gg.ngl.hyspeech.asset.dialog.HyspeechDialogRequirement;
 import gg.ngl.hyspeech.asset.dialog.action.builder.BuilderActionBeginDialog;
 import gg.ngl.hyspeech.player.HyspeechPlayerConfig;
@@ -111,14 +112,53 @@ public class ActionBeginDialog extends ActionBase {
                 return currentDialogId;
             }
 
-            if (areRequirementsMet(asset, store, playerComponent)) {
-                return currentDialogId;
+            if (!areRequirementsMet(asset, store, playerComponent)) {
+                currentDialogId = asset.getFail();
+                continue;
             }
 
-            currentDialogId = asset.getFail();
+            if (asset.getType().isChoice() && !hasEligibleChoiceEntry(asset, store, playerComponent)) {
+                currentDialogId = asset.getFail();
+                continue;
+            }
+
+            return currentDialogId;
         }
 
         return null;
+    }
+
+    private boolean hasEligibleChoiceEntry(@Nonnull HyspeechDialogAsset asset,
+                                           @Nonnull Store<EntityStore> store,
+                                           @Nonnull Player playerComponent) {
+        HyspeechDialogEntry[] entries = asset.getEntries();
+        if (entries == null || entries.length == 0) {
+            return false;
+        }
+
+        for (HyspeechDialogEntry entry : entries) {
+            if (entry == null) {
+                continue;
+            }
+
+            if (areEntryRequirementsMet(entry, store, playerComponent)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean areEntryRequirementsMet(@Nonnull HyspeechDialogEntry entry,
+                                            @Nonnull Store<EntityStore> store,
+                                            @Nonnull Player playerComponent) {
+        HyspeechDialogRequirement[] requirements = entry.getRequirements();
+        if (requirements == null || requirements.length == 0) {
+            return true;
+        }
+
+        HyspeechPlayerConfig playerConfig = Hyspeech.hyspeechPlayerMap.get(playerComponent.getPlayerRef()).getConfig().get();
+        return areRequirementsMet(requirements, store, playerComponent, playerConfig);
     }
 
     private boolean areRequirementsMet(@Nonnull HyspeechDialogAsset asset,
@@ -130,7 +170,13 @@ public class ActionBeginDialog extends ActionBase {
         }
 
         HyspeechPlayerConfig playerConfig = Hyspeech.hyspeechPlayerMap.get(playerComponent.getPlayerRef()).getConfig().get();
+        return areRequirementsMet(requirements, store, playerComponent, playerConfig);
+    }
 
+    private boolean areRequirementsMet(@Nonnull HyspeechDialogRequirement[] requirements,
+                                       @Nonnull Store<EntityStore> store,
+                                       @Nonnull Player playerComponent,
+                                       @Nonnull HyspeechPlayerConfig playerConfig) {
         ItemContainer allItems = playerComponent.getInventory().getCombinedHotbarFirst();
         for (HyspeechDialogRequirement requirement : requirements) {
             if (requirement == null) {
